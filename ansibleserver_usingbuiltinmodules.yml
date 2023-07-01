@@ -5,27 +5,36 @@
 
   vars:
     # username for private automation hub for EE or to password protected registry
-    registry_user: "USERNAME"
+    registry_user: "rcartner001"
     # password for private automation hub for EE or to password protected registry
     registry_pass: "PASSWORD"
     # username for development server
-    username: "ansible"
+    username: "ricky"
     # port for web server access
-    dev_server_port: 443
-    # folder to copy ssl certs from (built into EE or mounted at runtime) or localhost folder if running ansible-playbook
-    certandkeysourcefolder: "/certs/"
-    # folder to create to deploy ssl certs to
-    certandkeydestfolder: "/etc/pki/tls/certs/"
-    # name of certificate, delete if using self-signed
-    cert_name: "CERT.cer"
-    # name of key, delete if using self-signed
-    key_name: "KEY.key"
+    dev_server_port: 8001
     # specific image to pull to development server and assign in ansible-navigator.yml
     ansible_image: "registry.redhat.io/ansible-automation-platform-23/ee-supported-rhel8:latest"
+
+    # ################################################################
+    # cert information for allowing "https"
+    # ################################################################
+    # folder to copy ssl certs from (built into EE or mounted at runtime) or localhost folder if running ansible-playbook
+    # certandkeysourcefolder: "/certs/"
+    # folder to create to deploy ssl certs to
+    # certandkeydestfolder: "/etc/pki/tls/certs/"
+    # name of certificate, delete if using self-signed
+    # cert_name: "CERT.cer"
+    # name of key, delete if using self-signed
+    # key_name: "KEY.key"
+
+    # ################################################################
+    # Additional deployment information
+    # NOTE: Removed from here because it is also in Roles/defaults/main.yml
+    # ################################################################
     # Deploy an inventory, group variables and host variables files from files folder in role
-    deploy_inventory: true
+    # deploy_inventory: true
     # Deploy an example repository with a basic role structure
-    deploy_example_repo: true
+    # deploy_example_repo: true
 
   roles:
     - shadowman_dev_server_builtin
