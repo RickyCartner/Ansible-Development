@@ -97,6 +97,13 @@
     owner: "{{ username }}"
     mode: '0644'
 
+- name: Ensure vimrc is set for user
+  ansible.builtin.template:
+    src: .vimrc.j2
+    dest: "/home/{{ username }}/.vimrc"
+    owner: "{{ username }}"
+    mode: '0644'
+
 - name: Apply code server settings
   ansible.builtin.template:
     src: config.yml.j2
@@ -154,20 +161,35 @@
     state: started
     daemon_reload: true
 
+- name: Activate AAP repository
+  ansible.builtin.command:
+    # name:
+    #   - podman
+    #   - git
+    # state: present
+
 - name: Install podman and git
   ansible.builtin.dnf:
     name:
+      - ansible-navigator
       - podman
       - git
     state: present
 
-- name: Install ansible-navigator
-  become_user: "{{ username }}"
-  become: true
-  ansible.builtin.pip:
-    name: ansible-navigator
-    state: present
-    extra_args: --user
+- name: Deactivate AAP repository (prevent automatic dnf weekly updates)
+  ansible.builtin.command:
+    # name:
+    #   - podman
+    #   - git
+    # state: present
+
+# - name: Install ansible-navigator
+#   become_user: "{{ username }}"
+#   become: true
+#   ansible.builtin.pip:
+#     name: ansible-navigator
+#     state: present
+#     extra_args: --user
 
 - name: Allocate subuids for user
   subuid:
@@ -208,6 +230,7 @@
     version: main
   when: deploy_example_repo
 
+# Need to update this command for bcbssc firewall settings
 - name: Open up correct port
   ansible.builtin.command: "firewall-cmd --permanent --zone=public --add-port={{ dev_server_port }}/tcp"
   register: firewall
