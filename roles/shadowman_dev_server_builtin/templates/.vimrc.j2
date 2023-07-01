@@ -1,0 +1,44 @@
+" Map <leader> key to a comma
+let mapleader = ','
+
+" #########################################################
+" # Normal mode
+" #########################################################
+" Map F3 to toggle on and off the line numbers in Normal mode
+nmap <F3> :set nu! <CR>
+
+" Map <leader>F3 to toggle on and off the Relative line numbers in Normal mode
+nmap <leader><F3> :set rnu! <CR>
+
+" #########################################################
+" # Insert mode
+" #########################################################
+" Map F3 to toggle on and off the line numbers in INSERT mode
+nmap <F3> <ESC> :set nu! <CR>i
+
+" Map <leader>F3 to toggle on and off the Relative line numbers in INSERT mode
+nmap <F4> <ESC> :set rnu! <CR>i
+
+" #########################################################
+" # Autocorrect Dictionary
+" #########################################################
+abbr ture true
+abbr flase false
+
+" #########################################################
+" # The line below will update:
+" # The tab character to            → unicode u2192
+" # The end of line character to    ↵  unicode u21b2
+" #########################################################
+set listchars=tab:→\ ,eol:↵
+
+" #########################################################
+" # Turn on filetype indent
+" # Change tab settings for yaml and yml programs
+" # ts = tabstop
+" # sw = shiftwidth
+" # sts = softtabstop
+" #########################################################
+filetype indent on
+autocmd FileType yaml,yml setlocal noexpandtab tabstop=2 sw=2 sts=2
+
