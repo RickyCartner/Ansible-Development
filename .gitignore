@@ -1,0 +1,3 @@
+ansible_navigator.log
+**.log*
+**artifact*.json*
