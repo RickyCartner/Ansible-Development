@@ -1,0 +1,13 @@
+[development_system]
+a70lsisyanst002.mgmt.bcbssc.com
+
+[development_qual]
+a70lqisyanst004.mgmt.bcbssc.com
+
+[development_prod]
+a70lpisyanst004.mgmt.bcbssc.com
+
+[development_servers:children]
+development_system
+development_qual
+development_prod

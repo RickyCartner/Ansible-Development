@@ -1,3 +1,0 @@
----
-ansible_image: "registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest"
-additionalimagestores: "/var/lib/myee-shared"

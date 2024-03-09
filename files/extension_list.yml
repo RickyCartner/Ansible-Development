@@ -1,0 +1,14 @@
+---
+extensions:
+  - name: redhat.ansible
+    version: latest
+  - name: redhat.vscode-yaml
+    version: 1.0
+  - name: ms-python.python
+    version: 2.0
+  - name: ms-python.vscode-pylance
+    version: 1.14
+  - name: oderwat.indent-rainbow
+    version: 4.0
+  - name: samuelcolvin.jinjahtml
+    version: 5.0.2

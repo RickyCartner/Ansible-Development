@@ -1,0 +1,45 @@
+---
+- name: Collect firewalld ports used
+  ansible.builtin.command:
+    cmd: firewall-cmd --list-ports
+  register: used_ports
+  changed_when: used_ports.rc != 0
+
+- name: Strip port numbers only and convert to a list
+  ansible.builtin.set_fact:
+    port_list: "{{ port_list + [item.split('/') | first | int] }}"
+  loop: "{{ used_ports.stdout | ansible.builtin.split }}"
+
+# ##################################
+# Validate requested port
+# ##################################
+- name: Verify requested port is available (not in current port_list)
+  ansible.builtin.set_fact:
+    port_available: >-
+      {% if (dev_server_port | int) in port_list %}false{% else %}true{% endif %}
+  when: dev_server_port != ''
+
+- name: Fail if requested port is not available
+  ansible.builtin.fail:
+    msg: "The requested port is not available. Try a different port or keep port blank to assign the first available port between 8001-8050"
+  when:
+    - dev_server_port != ''
+    - not port_available
+
+# ##################################
+# Assign an available port
+# ##################################
+- name: Get first unused port in range 8001-8050 (if no port requested)
+  ansible.builtin.set_fact:
+    dev_server_port: "{{ (range(8001, 8050) | list) | difference(port_list) | first }}"
+  when: dev_server_port == ''
+  ignore_errors: true
+
+- name: Fail if requested port is not available
+  ansible.builtin.fail:
+    msg: "There are no available ports between 8001-8050"
+  when: dev_server_port == ''
+
+- name: Get first unused port in range 8001-8050 (if no port requested)
+  ansible.builtin.set_fact:
+    port_available: true

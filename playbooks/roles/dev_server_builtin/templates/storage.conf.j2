@@ -1,0 +1,7 @@
+# Default Podman rootless user
+# Saved to: /home/{{ username }}/.config/containers/storage.conf
+# Will be used instead of /etc/containers/storage.conf
+
+[storage]
+driver        = "overlay"
+graphroot     = "/var/lib/containers/$USER/storage"

@@ -1,0 +1,33 @@
+---
+# =====================================================
+# STEP 1
+# =====================================================
+- name: Download latest code-server
+  hosts: localhost
+  become: true
+
+  tags:
+    - download_cs
+
+  vars:
+    # Set version to be latest or the version you want to update to
+    version: latest
+
+  roles:
+    - dev_server_download
+
+# =====================================================
+# STEP 2
+# =====================================================
+- name: Update Ansible development server
+  hosts:
+    - a70lqisyanst004.mgmt.bcbssc.com
+    - a70lpisyanst004.mgmt.bcbssc.com
+    - a70lpisyanst008.mgmt.bcbssc.com
+  become: true
+
+  tags:
+    - update_de
+
+  roles:
+    - dev_server_update

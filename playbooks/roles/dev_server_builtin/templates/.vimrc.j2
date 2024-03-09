@@ -1,0 +1,54 @@
+" Turn on line numbers - NOTE: [:set nu!] will toggle line number on/off
+":set nu
+
+" Map <leader> key to comma
+let mapleader = ','
+
+" Map F3 to toggle on and off the line number in Normal Mode - NOTE 'nmap' means 'normal mode' map
+nmap <F3> :set nu! <CR>
+
+" Map F3 to toggle on and off the Relative line number in Normal Mode - NOTE <leader> default key is \
+nmap <leader><F3> :set rnu! <CR>
+
+
+" Map F3 to toggle on and off the line number in INSERT Mode
+" #NOTE: 'imap' means 'insert mode' map
+" #NOTE: <ESC> will temporarily remove us from INSERT mode before sending the :set command
+imap <F3> <ESC> :set nu! <CR>i
+
+" Map F4 to toggle on and off the Relative line number in INSERT Mode - NOTE: <leader> default key is \
+imap <F4> <ESC> :set rnu! <CR>i
+
+
+" ======================================================
+" #Autocorrect Dictionary
+" ======================================================
+abbr ture true
+abbr flase false
+
+
+
+" ======================================================
+" Fix auto-indentation for YAML/YML files
+" youtube.com/watch?v=6sslhOEd2ZA
+" ======================================================
+" Tabbing Notes
+" sw           = shiftwidth - used when NOT in [INSERT] mode - use [>>] or [<<] for tabing
+" ts           = tabstop - used when NOT in [INSERT] mode
+" sts          = softtabstop - used when in [INSERT] mode
+
+" expandtab    = use spaces instead of tabs
+" noexpandtab  = use tabs instead of spaces
+" indentkeys   =
+" ======================================================
+
+filetype indent on
+autocmd FileType yaml,yml setlocal tabstop=2 shiftwidth=2 softtabstop=2 expandtab indentkeys-=0#  " smartindent autoindent
+
+"augroup yaml_yml_mapping
+"  autocmd!
+"  autocmd FileType yaml,yml |
+"    setlocal ts=2 |
+"    setlocal sts=2 |
+"    setlocal sw=2 |
+"    setlocal expandtab

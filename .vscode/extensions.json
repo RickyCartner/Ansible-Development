@@ -1,6 +1,8 @@
 {
-    "recommendations": [
-      "redhat.ansible",
-      "redhat.vscode-yaml"
-    ]
+  "recommendations": [
+    "redhat.ansible",
+    "redhat.vscode-yaml",
+    "oderwat.indent-rainbow",
+    "dracula-theme.theme-dracula"
+  ]
 }

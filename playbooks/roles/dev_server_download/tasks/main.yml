@@ -1,0 +1,47 @@
+---
+# - name: Get Node version
+#   ansible.builtin.import_tasks: get_node.yml
+
+- name: Discover latest version of code-server
+  ansible.builtin.set_fact:
+    version: "{{ (lookup('url', 'https://api.github.com/repos/coder/code-server/releases/latest', headers=_github_api_headers,
+              split_lines=False) | from_json).get('tag_name') | replace('v', '') }}"
+  run_once: true
+  until: version is version('0.0.0', '>=')
+  retries: 10
+  when: version == "latest"
+
+# # - name: Display url to download
+# #   ansible.builtin.debug:
+# #     var: codeserver_url
+
+- name: Download New Code-server
+  ansible.builtin.get_url:
+    url: "{{ codeserver_url }}"
+    dest: /tmp/code-server.rpm
+    mode: '0440'
+
+- name: Copy Code-server to remote host
+  ansible.builtin.copy:
+    src: /tmp/code-server.rpm
+    dest: /app/code-server/
+    mode: '0755'
+  delegate_to: "{{ item }}"
+  loop:
+    - a70lqisyanst004.mgmt.bcbssc.com
+    - a70lpisyanst004.mgmt.bcbssc.com
+    - a70lpisyanst008.mgmt.bcbssc.com
+
+- name: Remove Code-Server from /tmp dir
+  ansible.builtin.file:
+    path: /tmp/code-server.rpm
+    state: absent
+
+# - name: Discover latest version of code-server
+#   ansible.builtin.set_fact:
+#     version: "{{ (lookup('url', 'https://pkgrepo.bcbssc.com/ui/native/general/resources/buildcontainer/node', headers=_github_api_headers,
+#               split_lines=true) | from_json).get('name') | replace('v', '') }}"
+  # run_once: true
+  # until: version is version('0.0.0', '>=')
+  # retries: 10
+  # when: version == "latest"

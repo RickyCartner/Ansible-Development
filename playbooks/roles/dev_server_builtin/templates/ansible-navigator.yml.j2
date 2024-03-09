@@ -1,0 +1,15 @@
+---
+ansible-navigator:
+  app: welcome
+  execution-environment:
+    container-engine: podman
+    image: {{ ansible_image }}
+    pull:
+      policy: missing
+  playbook-artifact:
+    enable: true
+  logging:
+    level: debug
+  editor:
+    command: code-server {filename}
+    console: false

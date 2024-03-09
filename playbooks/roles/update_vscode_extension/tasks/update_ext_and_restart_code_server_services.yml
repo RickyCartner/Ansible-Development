@@ -1,0 +1,21 @@
+---
+- name: Parse user from systemd service
+  ansible.builtin.set_fact:
+    username: "{{ item.value.name | regex_search('a-\\w+') }}"
+  
+
+- name: Install ansible extension
+  become_user: "{{ username }}"
+  become: true
+  ansible.builtin.command: "/bin/code-server --install-extension {{ item.path }}"
+  register: result
+  changed_when: "'was successfully installed' in result.stdout"
+  # loop: "{{ query('fileglob', '/app/code-server/extensions/*') }}"
+  # loop: "{{ playbook_dir }}/files/extensions/"
+  loop: "{{ vsix_files.files | flatten(1) }}"
+
+- name: Restart all running code-server services
+  ansible.builtin.systemd:
+    name: "{{ item.value.name }}"
+    state: restarted
+    daemon_reload: true

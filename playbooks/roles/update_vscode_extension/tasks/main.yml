@@ -1,0 +1,107 @@
+---
+# ###########################################################################
+# Add extenstion from local file because this is a locked down environment
+# ###########################################################################
+# - name: Remove directory
+#   ansible.builtin.file:
+#     path: "/app/code-server/extensions/"
+#     state: absent
+
+- name: Collection extension list
+  ansible.builtin.include_vars:
+    file: "{{ playbook_dir }}/files/extensions/extension_list.yml"
+    name: extension_list
+
+- name: Display list
+  ansible.builtin.debug:
+    msg:
+      - "Extension: {{ item.name }}"
+      - "Version: {{ item.version }}"
+  loop: "{{ extension_list.extensions }}"
+
+- name: Discover latest version of extension
+  ansible.builtin.set_fact:
+    extension_list: "{{ extension_list | combine(new_item, recursive=true) }}"
+  vars:
+    new_item: "{ '{{ item.name }}': { '{{ item.name }}': '5.2.1' } }"
+    # item.version: 5.2.1 # "{{ (lookup('url', 'https://api.github.com/repos/coder/code-server/releases/latest', headers=_github_api_headers,
+              # split_lines=False) | from_json).get('tag_name') | replace('v', '') }}"
+  # run_once: true
+  # until: version is version('0.0.0', '>=')
+  # retries: 10
+  loop: "{{ extension_list.extensions }}"
+  when: item.version == "latest"
+
+- name: Display list
+  ansible.builtin.debug:
+    msg: 
+      - "Extension: {{ item.name }}"
+      - "Version: {{ item.version }}"
+  loop: "{{ extension_list.extensions }}"
+
+# codeserver_url: https://marketplace.visualstudio.com/items?itemName={{ item }}
+
+# - name: Download new extension
+#   ansible.builtin.get_url:
+#     url: "https://marketplace.visualstudio.com/items?itemName={{ item }}"
+#     dest: /app/code-server/extensions/
+#     mode: '0440'
+
+# - name: Download new extension
+#   ansible.builtin.get_url:
+#     url: "{{ codeserver_url }}"
+#     dest: /tmp/code-server.rpm
+#     mode: '0440'
+
+# - name: Ensure custom code-server extensions directory exists
+#   ansible.builtin.file:
+#     path: "/app/code-server/extensions/"
+#     recurse: false
+#     state: directory
+#     owner: root
+#     group: root
+#     mode: '0777'
+
+# - name: Deploy extensions for code server
+#   ansible.builtin.copy:
+#     src: "{{ playbook_dir }}/files/extensions/"
+#     dest: "/app/code-server/extensions/"
+#     owner: root
+#     group: root
+#     mode: '0744'
+
+# - name: Register file extensions
+#   ansible.builtin.find:
+#     paths: "/app/code-server/extensions/"
+#     patterns: "*.vsix"
+#   register: vsix_files
+
+# - name: Find all running services
+#   ansible.builtin.service_facts:
+
+# - name: Call task to update extension and restart all running code-server instances
+#   ansible.builtin.include_tasks: update_ext_and_restart_code_server_services.yml
+#   when:
+#     - '"code-server" in item.value.name'
+#     - item.value.state == "running"
+#   loop: "{{ ansible_facts.services | dict2item }}"
+
+# # - name: Restart all running code-server to upgrade
+# #   ansible.builtin.systemd:
+# #     name: "{{ item.value.name }}"
+# #     state: restarted
+# #     daemon_reload: true
+# #   when:
+# #     - '"code-server" in item.value.name'
+# #     - item.value.state == "running"
+# #   loop: "{{ ansible_facts.services | dict2items }}"
+
+
+
+
+# # - name: Daemon-reload, enable and start code-server
+# #   ansible.builtin.systemd:
+# #     name: code-server@{{ username }}
+# #     enabled: true
+# #     state: started
+# #     daemon_reload: true

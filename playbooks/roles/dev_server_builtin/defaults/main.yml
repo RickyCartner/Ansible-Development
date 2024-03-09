@@ -1,0 +1,12 @@
+---
+# https://github.com/coder/code-server/releases
+version: "4.18.0"
+# codeserver_url: https://github.com/coder/code-server/releases/download/v{{ version }}/code-server-{{ version }}-amd64.rpm
+# codeserver_url: https://git.bcbssc.com/dv18/Ansible-Development/releases/download/v{{ version }}/code-server-{{ version }}-amd64.rpm
+# codeserver_url: "/app/code-server/code-server-{{ version }}-amd64.rpm"
+codeserver_url: "/app/code-server/code-server.rpm"
+ansible_repo: "ansible-automation-platform-2.4-for-rhel-8-x86_64-rpms"
+
+port_list: []
+dev_server_port: ''
+port_available: false

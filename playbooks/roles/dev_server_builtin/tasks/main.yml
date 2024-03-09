@@ -1,0 +1,447 @@
+---
+# STEP 1: Manually install code-server.rpm to the directory: /app/ 
+#         This is due to the potential size of the file, we should not store it in any other location
+
+- name: Check if requested port is available or assign port
+  ansible.builtin.import_tasks: find_available_port.yml
+
+# - name: Port available validation check - Stop job if validation has not been performed
+#   ansible.builtin.meta: end_play
+#   when: not port_available
+
+- name: Ensure custom code-server directory exists
+  ansible.builtin.file:
+    path: "/app/code-server/"
+    recurse: false
+    state: directory
+    owner: root
+    group: root
+    mode: '0777'
+
+# - name: Download code-server
+#   ansible.builtin.get_url:
+#     url: "{{ codeserver_url }}"  # see defaults/main.yaml
+#     # dest: /tmp/code-server.rpm
+#     dest: /app/code-server/code-server.rpm
+#     mode: '0440'
+
+- name: Ensure custom user directory exists
+  ansible.builtin.file:
+    path: "/app/code-server/{{ username }}/"
+    recurse: true
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: "0775"
+
+- name: Ensure custom facts directory exists
+  ansible.builtin.file:
+    path: "/app/code-server/{{ username }}/code-server/"
+    recurse: true
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: "0700"
+
+- name: Ensure .local/share directory exists
+  ansible.builtin.file:
+    path: "/home/{{ username }}/.local/share/"
+    recurse: true
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: "0700"
+
+- name: Provide symlink for code-server to use
+  ansible.builtin.file:
+    src: "/app/code-server/{{ username }}/code-server"
+    dest: "/home/{{ username }}/.local/share/code-server"
+    force: true
+    state: link
+    follow: false
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+
+- name: Install Code Server
+  ansible.builtin.dnf:
+    name: "{{ codeserver_url }}"
+    state: present
+    disable_gpg_check: true
+  notify: Restart_Codeserver  # see handlers/main.yaml
+
+# ###################################################
+# Certificate installation tasks
+# NOTE: Using the same cert as Ansible Controller
+# ###################################################
+- name: Ensure certs directory exists
+  ansible.builtin.file:
+    path: "{{ certandkeydestfolder }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0741'
+  when: cert_name is defined
+
+- name: Copy Cert
+  ansible.builtin.copy:
+    src: "{{ certandkeysourcefolder }}{{ cert_name }}"
+    dest: "{{ certandkeydestfolder }}{{ cert_name }}"
+    remote_src: true
+    owner: root
+    group: wheel
+    mode: '0644'
+  when: cert_name is defined
+
+- name: Copy Key
+  ansible.builtin.copy:
+    src: "{{ certandkeysourcefolder }}{{ key_name }}"
+    dest: "{{ certandkeydestfolder }}{{ key_name }}"
+    remote_src: true
+    owner: root
+    group: wheel
+    mode: '0644'
+  when: key_name is defined
+
+
+# ###################################################
+# Code-Server settings
+# ###################################################
+- name: Apply our systemd service file
+  ansible.builtin.template:
+    src: code-server.service.j2
+    dest: /etc/systemd/system/code-server@{{ username }}.service
+    owner: "{{ username }}"
+    group: wheel
+    mode: '0744'
+  notify: Restart_Codeserver  # see handlers/main.yaml
+
+- name: Ensure custom facts directory exists
+  ansible.builtin.file:
+    path: "/home/{{ username }}/.local/share/code-server/User/"
+    recurse: true
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+
+- name: Ensure settings directory exists
+  ansible.builtin.file:
+    path: "/home/{{ username }}/.config/code-server/"
+    recurse: true
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+
+- name: Ensure ansible directory exists
+  ansible.builtin.file:
+    path: "/home/{{ username }}/ansible/localplaybooks/"
+    recurse: true
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+
+- name: Apply code server defaults
+  ansible.builtin.template:
+    src: settings.json.j2
+    dest: "/home/{{ username }}/.local/share/code-server/User/settings.json"
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: '0644'
+
+- name: Apply code server settings - ip address, port, and ssl cert
+  ansible.builtin.template:
+    src: config.yml.j2
+    dest: "/home/{{ username }}/.config/code-server/config.yaml"
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: '0644'
+  notify: Restart_Codeserver  # see handlers/main.yaml
+
+# ###################################################
+# Create Group/Host vars folders
+# ###################################################
+- name: Ensure ansible group vars folder exists
+  ansible.builtin.file:
+    path: "/home/{{ username }}/ansible/group_vars/"
+    recurse: true
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+
+- name: Ensure ansible host vars folder exists
+  ansible.builtin.file:
+    path: "/home/{{ username }}/ansible/host_vars/"
+    recurse: true
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+
+# ###################################################
+# User settings
+# ###################################################
+- name: Ensure bashrc is set for user
+  ansible.builtin.template:
+    src: .bashrc.j2
+    dest: "/home/{{ username }}/.bashrc"
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: '0644'
+
+- name: Ensure vimrc is set for user
+  ansible.builtin.template:
+    src: .vimrc.j2
+    dest: "/home/{{ username }}/.vimrc"
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: '0644'
+
+# ###################################################
+# Podman settings
+# ###################################################
+- name: Ensure Podman container settings directory exists
+  ansible.builtin.file:
+    path: "/home/{{ username }}/.config/containers/"
+    recurse: true
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+
+- name: Deploy Podman container config
+  ansible.builtin.template:
+    src: storage.conf.j2
+    dest: "/home/{{ username }}/.config/containers/storage.conf"
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: '0644'
+
+- name: Update /var/lib/containers directory to allow users to add EE's
+  ansible.builtin.file:
+    path: "/var/lib/containers/{{ username }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0777'
+
+# ###################################################
+# Ansible configuration
+# ###################################################
+- name: Deploy ansible-navigator config
+  ansible.builtin.template:
+    src: ansible-navigator.yml.j2
+    dest: "/home/{{ username }}/ansible/ansible-navigator.yml"
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: '0644'
+
+- name: Deploy ansible.cfg
+  ansible.builtin.template:
+    src: ansible.cfg.j2
+    dest: "/home/{{ username }}/ansible/ansible.cfg"
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: '0644'
+
+
+# ###################################################
+# Inventory information and adding Group/Host files
+# ###################################################
+- name: Deploy inventory
+  ansible.builtin.copy:
+    src: inventory
+    dest: "/home/{{ username }}/ansible/inventory"
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: '0644'
+  when: deploy_inventory
+
+- name: Deploy ansible group vars folder
+  ansible.builtin.copy:
+    src: files/group_vars/
+    dest: "/home/{{ username }}/ansible/group_vars/"
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: '0644'
+  when: deploy_inventory
+
+- name: Deploy ansible host vars folder
+  ansible.builtin.copy:
+    src: files/host_vars/
+    dest: "/home/{{ username }}/ansible/host_vars/"
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: '0644'
+  when: deploy_inventory
+
+
+# ###########################################################################
+# Add extenstion from local file because this is a locked down environment
+# ###########################################################################
+- name: Ensure custom code-server extensions directory exists
+  ansible.builtin.file:
+    path: "/app/code-server/extensions/"
+    recurse: false
+    state: directory
+    owner: root
+    group: root
+    mode: '0777'
+
+- name: Ensure local code-server extensions directory exists
+  ansible.builtin.file:
+    path: "/home/{{ username }}/.local/share/code-server/extensions/"
+    recurse: true
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: '0700'
+
+- name: Deploy extensions for code server
+  ansible.builtin.copy:
+    # src: files/extensions/
+    src: "{{ playbook_dir }}/files/extensions/"
+    dest: "/app/code-server/extensions/"
+    owner: root
+    group: root
+    mode: '0744'
+
+- name: Register file extensions
+  ansible.builtin.find:
+    paths: "/app/code-server/extensions/"
+    patterns: "*.vsix"
+  register: vsix_files
+
+- name: Install ansible extension
+  become_user: "{{ username }}"
+  become: true
+  ansible.builtin.command: "/bin/code-server --install-extension {{ item.path }}"
+  register: result
+  changed_when: "'was successfully installed' in result.stdout"
+  loop: "{{ vsix_files.files | flatten(1) }}"
+
+
+- name: Allow code-server to listen on port 443
+  ansible.builtin.command: "setcap cap_net_bind_service=+ep /usr/lib/code-server/lib/node"
+  when: dev_server_port == 443
+
+- name: Daemon-reload, enable and start code-server
+  ansible.builtin.systemd:
+    name: code-server@{{ username }}
+    enabled: true
+    state: started
+    daemon_reload: true
+
+# ############################################################
+# Podman, Git, Ansible-Navigator should already be installed
+# ############################################################
+- name: Enable AAP Repo and install applications
+  ansible.builtin.dnf:
+    name:
+      - ansible-navigator
+      - git
+    enablerepo: "{{ ansible_repo }}"
+    state: present
+
+# ##########################################################################################
+# subuid/subgid creation and podman update (if subuid or subgid is changed)
+
+# This will check to see if the user already exists before attempting to create the entry
+# ##########################################################################################
+- name: Allocate subuids for user
+  subuid:
+    user: "{{ username }}"
+  register: subuids
+
+- name: Allocate subgids for user
+  subgid:
+    group: "{{ username }}"
+  register: subgids
+
+- name: Ensure changes are applied to podman
+  ansible.builtin.command: podman system migrate
+  when: subuids is changed or subgids is changed
+
+# ###################################################
+# Execution Environment setup
+# ###################################################
+- name: Check if EE present
+  become: true
+  become_user: "{{ username }}"
+  ansible.builtin.command: "podman image exists {{ ansible_image }}"
+  register: exists
+  changed_when: exists.rc == 1
+  failed_when: exists.rc > 1
+
+- name: Pull EE only if not present
+  become: true
+  become_user: "{{ username }}"
+  ansible.builtin.command: "podman pull --creds={{ registry_user }}:{{ registry_pass }} {{ ansible_image }}"
+  register: ee
+  changed_when: ee.rc == 0
+  when: exists.rc == 1
+
+# ############################################################
+# Create example playbook structure
+# ############################################################
+- name: Create example playbook structure directory
+  ansible.builtin.file:
+    path: "/home/{{ username }}/ansible/ansible-example/role/"
+    recurse: true
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+  when: deploy_ansiblegalaxy_repo
+
+- name: Create example role structure using ansible-galaxy
+  ansible.builtin.command:
+    cmd: ansible-galaxy init example-role
+    chdir: /tmp/
+  delegate_to: localhost
+  when: deploy_ansiblegalaxy_repo
+
+- name: Copy Example Structure to VM
+  ansible.builtin.copy:
+    src: /tmp/example-role/
+    dest: /home/{{ username }}/ansible/ansible-example/role/example-role
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+    mode: '0644'
+  when: deploy_ansiblegalaxy_repo
+
+# #######################################################
+# Manage ports-assigned.txt
+# #######################################################
+- name: Create port assigned validation directory
+  ansible.builtin.file:
+    path: "/app/code-server/ports-assigned.txt"
+    state: touch
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Append port and user to ports-assigned.txt
+  ansible.builtin.lineinfile:
+    path: /app/code-server/ports-assigned.txt
+    line: "{{ dev_server_port }} {{ username }}"
+
+
+# #######################################################
+# May not be a necessary step if we don't use firewalld
+# #######################################################
+- name: Open up correct port
+  # ansible.builtin.command: "firewall-cmd --permanent --zone=public --add-port={{ dev_server_port }}/tcp"
+  ansible.builtin.command: "firewall-cmd --permanent --add-port={{ dev_server_port }}/tcp"
+  register: firewall
+  changed_when: firewall.rc == 0
+  notify: Restart_firewalld
+
+- name: Check if user is lingering
+  ansible.builtin.stat:
+    path: "/var/lib/systemd/linger/{{ username }}"
+  register: user_lingering
+
+- name: Enable lingering is needed
+  ansible.builtin.command: "loginctl enable-linger {{ username }}"
+  when: not user_lingering.stat.exists
+
+- name: Display Weblink
+  ansible.builtin.debug:
+    msg:
+      - "https://{{ inventory_hostname }}:{{ dev_server_port }}/?folder=/home/{{ username }}/ansible"

@@ -1,0 +1,12 @@
+bind-addr: 0.0.0.0:{{ dev_server_port }}
+{% if code_server_password is defined and code_server_password | length > 0 %}
+auth: password
+password: '{{ code_server_password }}'
+{% else %}
+auth: none
+{% endif %}
+{% if cert_location is defined %}
+cert: true
+{% else %}
+cert: false
+{% endif %}

@@ -1,0 +1,56 @@
+---
+
+# UNCOMMENT WHEN FINISHED TESTING
+# - name: Download latest version of Code-Server
+#   ansible.builtin.import_role: dev_server_download
+
+# UNCOMMENT WHEN FINISHED TESTING
+- name: Install New Code-server
+  ansible.builtin.dnf:
+    name: /app/code-server/code-server.rpm
+    state: present
+    disable_gpg_check: true
+
+# #############################
+# Update Node version
+# #############################
+- name: Replace old Node version with approved Node version
+  ansible.builtin.copy:
+    src: /app/code-server/node-v{{ node_version }}-linux-x64/bin/node
+    dest: /usr/lib/code-server/lib/node
+    mode: 'preserve'
+    force: true
+
+- name: Insert line for Strict-Transport-Security
+  ansible.builtin.lineinfile:
+    path: /usr/lib/code-server/out/node/routes/index.js
+    insertafter: '^\s*app\.router\.use\(\(req, res, next\) => __awaiter\(void 0, void 0, void 0, function\* \(\) \{' # line 109
+    line: "        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');"
+
+# #############################
+# Restart code-server
+# #############################
+- name: Find all running services
+  ansible.builtin.service_facts:
+
+- name: Restart all running code-server to upgrade
+  ansible.builtin.systemd:
+    name: "{{ item.value.name }}"
+    state: restarted
+    daemon_reload: true
+  when:
+    - '"code-server" in item.value.name'
+    - item.value.state == "running"
+  loop: "{{ ansible_facts.services | dict2items }}"
+
+# - name: Display running services
+#   ansible.builtin.debug:
+#     var: services
+
+# - name: Call task to restart all running code-server instances
+#   ansible.builtin.include_tasks: restart_code_server_services.yml
+#   when:
+#     - '"code-server" in item.value.name'
+#     - item.value.state == "running"
+#   loop: "{{ ansible_facts.services | dict2items }}"
+#   no_log: true

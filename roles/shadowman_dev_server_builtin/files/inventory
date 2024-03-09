@@ -1,3 +1,0 @@
-[group1]
-#hostname1
-localhost ansible_connection=local

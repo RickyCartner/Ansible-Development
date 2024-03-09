@@ -1,0 +1,25 @@
+---
+# - name: Discover latest version of code-server
+#   ansible.builtin.set_fact:
+#     version: "{{ (lookup('url', 'https://pkgrepo.bcbssc.com/ui/native/general/resources/buildcontainer/node', headers=_github_api_headers,
+#               split_lines=true) | from_json).get('name') | replace('v', '') }}"
+
+# - name: Discover latest version of node
+#   ansible.builtin.set_fact:
+#     node_version: "{{ lookup('url', 'https://pkgrepo.bcbssc.com/artifactory/general/resources/buildcontainer/node', headers=_github_api_headers,
+#               wantlist=true) }}"
+
+# - name: Display node results
+#   ansible.builtin.debug:
+#     var: node_version
+
+- name: Download latest Node version
+  ansible.builtin.get_url:
+    url: "{{ node_url }}"
+    dest: /tmp/node-v{{ node_version }}-linux-x64.tar.xz
+    mode: '0440'
+
+- name: Uncompress node file
+  ansible.builtin.unarchive:
+    src: /tmp/node-v{{ node_version }}-linux-x64.tar.xz
+    dest: "/app/code-server/node-linux-x64/bin/node"

@@ -1,0 +1,11 @@
+---
+schemaVersion: 2.2.0
+metadata:
+  name: ansible-development
+components:
+  - name: ansible
+    container:
+      args: ['tail', '-f', '/dev/null']
+      # image: 'a70lpisyanst009.mgmt.bcbssc.com/ee-ansible-devstudio:latest'
+      image: 'images.pkgrepo.bcbssc.com/ee-ansible-devspaces:1.1'
+      sourceMapping: /projects

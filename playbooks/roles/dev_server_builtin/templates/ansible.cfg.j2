@@ -1,0 +1,31 @@
+[defaults]
+
+inventory               = /home/{{ username }}/ansible/inventory
+# vault_password_file     = /home/{{ username }}/ansible/.vault_password
+
+[galaxy]
+server_list = pah_rh-certified_repo, pah_validated_repo, pah_community_repo
+
+[galaxy_server.pah_rh-certified_repo]
+url=https://a70lpisyanst009.mgmt.bcbssc.com/api/galaxy/content/rh-certified/
+{% if pah_token is defined and pah_token | length > 0 %}
+token='{{ pah_token }}'
+{% else %}
+token=''
+{% endif %}
+
+[galaxy_server.pah_validated_repo]
+url=https://a70lpisyanst009.mgmt.bcbssc.com/api/galaxy/content/validated/
+{% if pah_token is defined and pah_token | length > 0 %}
+token='{{ pah_token }}'
+{% else %}
+token=''
+{% endif %}
+
+[galaxy_server.pah_community_repo]
+url=https://a70lpisyanst009.mgmt.bcbssc.com/api/galaxy/content/community/
+{% if pah_token is defined and pah_token | length > 0 %}
+token='{{ pah_token }}'
+{% else %}
+token=''
+{% endif %}

@@ -1,0 +1,22 @@
+---
+- name: Restart individual code-server services
+  hosts:
+    - a70lqisyanst004.mgmt.bcbssc.com
+    - a70lpisyanst004.mgmt.bcbssc.com
+    - a70lpisyanst008.mgmt.bcbssc.com
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Gather all services
+      ansible.builtin.service_facts:
+
+    - name: Restart all running code-server services
+      ansible.builtin.systemd:
+        name: "{{ item.value.name }}"
+        state: restarted
+        daemon_reload: true
+      when:
+        - '"code-server" in item.value.name'
+        - item.value.state == "running"
+      loop: "{{ ansible_facts.services | dict2items }}"
