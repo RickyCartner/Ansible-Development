@@ -15,3 +15,15 @@ Update the variables at the top of the playbook you choose in order to set up an
 7. Establish a directory structure
 8. Deploy an inventory/host/group vars if desired
 9. Deploy an example repository with a role structure if desired (https://github.com/shadowman-lab/Ansible-Example)
+
+## Workflow
+```mermaid
+graph LR
+  A[GitHub Code-Server] --> B
+  C[Ansible Code-Server] --> D[api]
+  D --> B[Ansible-Server]
+  E[Spotify-Connector] --> D
+  F[Apple-Connector] --> D
+  F --> G[Apple-Automation]
+  G --> H[SMS-backend]
+```
