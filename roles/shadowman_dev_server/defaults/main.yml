@@ -1,7 +1,7 @@
 ---
 version: "4.18.0"
 codeserver_url: https://github.com/coder/code-server/releases/download/v{{ version }}/code-server-{{ version }}-amd64.rpm
-deploy_inventory: true
-deploy_example_repo: true
+deploy_inventory: false
+deploy_example_repo: false
 deploy_ansiblegalaxy_repo: false
 _github_api_headers: "{{ {'GITHUB_TOKEN': lookup('ansible.builtin.env', 'GITHUB_TOKEN')} if (lookup('ansible.builtin.env', 'GITHUB_TOKEN')) else {} }}"

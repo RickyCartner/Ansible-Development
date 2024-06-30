@@ -1,0 +1,10 @@
+---
+- name: Testing localhost
+  hosts: all
+  become: false
+
+  tasks:
+    - name: Print the name of the host
+      ansible.builtin.debug:
+        var: hostvars[inventory_hostname]
+

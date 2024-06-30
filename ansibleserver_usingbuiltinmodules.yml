@@ -8,11 +8,11 @@
     # username for private automation hub for EE or to password protected registry
     registry_user: "rcartner" #"USERNAME"
     # password for private automation hub for EE or to password protected registry
-    registry_pass: "PASSWORD"
+    registry_pass: ""
     # password for code server, remove variable if not using auth with code server
-    code_server_pass: "PASSWORD"
+    # code_server_pass: "PASSWORD"
     # username for development server
-    username: "rcartner"
+    username: "ricky"
     # port for web server access
     dev_server_port: 8001
     
@@ -26,13 +26,13 @@
     #key_name: "KEY.key"
     
     # specific image to pull to development server and assign in ansible-navigator.yml
-    ansible_image: "registry.redhat.io/ansible-automation-platform-23/ee-supported-rhel8:latest"
+    ansible_image: "registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest"
     # Deploy an inventory, group variables and host variables files from files folder in role
     deploy_inventory: true
     # Deploy an example repository with a basic role structure from git
-    deploy_example_repo: true
+    # deploy_example_repo: true
     # Deploy an example repository using ansible-galaxy init
-    deploy_ansiblegalaxy_repo: false
+    # deploy_ansiblegalaxy_repo: false
     # Set version to be latest or the version you want to install
     version: latest
     # location of additional image store for shared storage, must be previously set up https://access.redhat.com/solutions/6206192. Remove if not using

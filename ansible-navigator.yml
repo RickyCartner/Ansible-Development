@@ -1,0 +1,20 @@
+---
+ansible-navigator:
+  app: welcome
+  mode: interactive  # modes: interactive (default) or stdout
+  ansible:
+    inventory:
+      entries:
+        - /home/ricky/ansible/repos/Ansible-Development/inventory
+  execution-environment:
+    container-engine: podman
+    image: "registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest"
+    pull:
+      policy: missing
+      arguments:
+        - "rcartner001:#78rrdSFf^lo"
+  logging:
+    level: debug
+  editor:
+    command: code-server {filename}
+    console: false
