@@ -160,6 +160,13 @@
   register: result
   changed_when: "'was successfully installed' in result.stdout"
 
+- name: Install dracula extension
+  become_user: "{{ username }}"
+  become: true
+  ansible.builtin.command: "/bin/code-server --install-extension dracula-theme.theme-dracula"
+  register: result
+  changed_when: "'was successfully installed' in result.stdout"
+
 - name: Allow code-server to listen on port 443
   ansible.builtin.command: "setcap cap_net_bind_service=+ep /usr/lib/code-server/lib/node"
   when: dev_server_port == 443
