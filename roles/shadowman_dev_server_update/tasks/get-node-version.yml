@@ -1,0 +1,73 @@
+---
+- name: Get latest Node.js minor version
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    major_version: ''
+    minor_version: '15'
+
+  tasks:
+    - name: Fetch code-server nodejs version
+      ansible.builtin.set_fact:
+        code_server_node: "{{ lookup('ansible.builtin.url', 'https://raw.github.com/coder/code-server/main/.node-version')
+                          | regex_findall('\\d+') }}"
+
+    - name: Parse code-server nodejs version
+      ansible.builtin.set_fact:
+        # cs_major_version: "{{ code_server_node | regex_search('^([0-9]+)\\.', '\\1') }}" # 20'
+        # cs_minor_version: "{{ code_server_node | regex_search('\\.([0-9]+)\\.', '\\1') }}" # '11'
+        # cs_minor_release: "{{ code_server_node | regex_search('\\.([0-9]+)$', '\\1') }}" # '1'
+        # cs_parsed_version: "{{ code_server_node | regex_search('^(\\d+)\\.(\\d+)\\.(\\d+)$') }}"
+        cs_major_version: "{{ major_version | ternary(major_version, code_server_node[0]) }}"
+        cs_minor_version: "{{ minor_version | ternary(minor_version, code_server_node[1]) }}"
+        cs_minor_release: "{{ code_server_node[2] }}"
+
+    # - name: Display nodejs version used in code-server
+    #   ansible.builtin.debug:
+    #     msg: "The nodejs version used in code-server is: {{ code_server_node }}"
+
+    - name: Fetch Node.js versions from the official Node.js API
+      ansible.builtin.set_fact:
+        node_versions: "{{ lookup('ansible.builtin.url', 'https://nodejs.org/dist/index.json', split_lines=False) | from_json }}"
+
+    - name: Filter versions for the specified major version
+      ansible.builtin.set_fact:
+        filtered_versions: "{{ node_versions | selectattr('version', 'search', '^v' + cs_major_version + '\\.') | list }}"
+
+    - name: Extract versions
+      ansible.builtin.set_fact:
+        version_list: "{{ filtered_versions | map(attribute='version') | list }}"
+
+    # - name: Extract minor versions from version_list
+    #   ansible.builtin.set_fact:
+    #     minor_versions: "{{ version_list | map('regex_search', '^v' + cs_major_version + '\\.(\\d+)\\.')
+    #                      | map('regex_replace', '^v' + cs_major_version + '\\.(\\d+)\\.', '\\1')
+    #                      | map('int') | list }}"
+
+    # - name: Get the latest minor version
+    #   ansible.builtin.set_fact:
+    #     latest_minor_version: "{{ minor_versions | max }}"
+
+    - name: Get the most recent minor release
+      ansible.builtin.set_fact:
+        latest_minor_release: "{{ version_list | select('search', '^v' + cs_major_version + '\\.' + cs_minor_version|string + '\\.')
+                                | map('regex_replace', '^v(' + cs_major_version + '\\.' + cs_minor_version + '\\.)', '\\1')
+                                | list | first }}"
+
+
+    # - name: Extract minor release from version_list
+    #   ansible.builtin.set_fact:
+    #     minor_release: "{{ version_list | map('regex_search', '^v' + major_version + '\\.' + custom_minor_version + '\\.')
+    #                     | map('regex_replace', '^v' + major_version + '\\.' + custom_minor_version + '\\.', '\\1')
+    #                     | list }}"
+        # minor_release: "{{ version_list | map('regex_search', '^v' + major_version + '\\.' + latest_minor_version + '\\.')
+        #                 | list }}"
+                         # | map('regex_replace', '^v' + major_version + '\\.' + latest_minor_version + '\\.', '\\1')
+                         # | map('int') | list }}"
+
+    - name: Print the latest minor version
+      ansible.builtin.debug:
+        msg: "The latest nodejs patch for code-servers node version ({{ code_server_node | join('.') }}) is: {{ latest_minor_release }}"
+          # - "The latest minor version and release for Node.js version {{ cs_major_version }}.{{ cs_minor_version }} is:
+          #     {{ latest_minor_release }}"
